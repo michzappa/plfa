@@ -202,7 +202,7 @@ data Total′ : ℕ → ℕ → Set where
   → m * p ≤ n * p
 -- m * p ≤ n * p
 -- p * m ≤ n * p
--- p * m ≤ p * n (provided by *-monoʳ-≤)
+-- p * m ≤ p * n (provided by *-monoʳ-≤ p m n m≤n)
 *-monoˡ-≤ m n p m≤n  rewrite *-comm m p | *-comm n p  = *-monoʳ-≤ p m n m≤n
 
 *-mono-≤ : ∀ (m n p q : ℕ)
@@ -279,7 +279,7 @@ trichotomy (suc m) (suc n) with trichotomy m n
   → m + p < n + p
 -- m + p < n + p
 -- p + m < n + p
--- p + m < p + n (provided by +-monoʳ-<)
+-- p + m < p + n (provided by +-monoʳ-< p m n m<n)
 +-monoˡ-< m n p m<n  rewrite +-comm m p | +-comm n p  = +-monoʳ-< p m n m<n
 
 +-mono-< : ∀ (m n p q : ℕ)
@@ -445,24 +445,49 @@ _+-Bin_ : Bin → Bin → Bin
 +-Bin-incˡ (b O) (c O) = refl
 +-Bin-incˡ (b O) (c I) = refl
 +-Bin-incˡ (b I) ⟨⟩ = refl
+-- ((inc b +-Bin c) O) ≡ (inc (b +-Bin c) O)
+-- (inc (b +-Bin c) O) ≡ (inc (b +-Bin c) O)
 +-Bin-incˡ (b I) (c O) rewrite +-Bin-incˡ b c = refl
+-- ((inc b +-Bin c) I) ≡ (inc (b +-Bin c) I)
+-- (inc (b +-Bin c) I) ≡ (inc (b +-Bin c) I)
 +-Bin-incˡ (b I) (c I) rewrite +-Bin-incˡ b c = refl
 
 to-distrib-+ : ∀ (m n : ℕ) → to (m + n) ≡ (to m) +-Bin (to n)
-to-distrib-+ zero n rewrite +-Bin-zeroˡ (nat-to-can n)= refl
+-- to n ≡ ((⟨⟩ O) +-Bin to n)
+-- to n ≡ to n
+to-distrib-+ zero n rewrite +-Bin-zeroˡ (nat-to-can n) = refl
+
+-- inc (to (m + n)) ≡ (inc (to m) +-Bin to n)
+-- inc ((to m) +-Bin to n) ≡ (inc (to m) +-Bin to n)
+-- (inc (to m) +-Bin to n) ≡ (inc (to m) +-Bin to n)
 to-distrib-+ (suc m) n rewrite to-distrib-+ m n | sym (+-Bin-incˡ (to m) (to n)) = refl
 
 +-Bin-double : ∀ (b : Bin)→ One b → b +-Bin b ≡ (b O)
 +-Bin-double _ one-one = refl
+-- (inc (b +-Bin b) O) ≡ ((b I) O)
+-- (inc (b O) O) ≡ ((b I) O)
+-- ((b I) O)
 +-Bin-double (b I) (one-I one-b) rewrite +-Bin-double b one-b = refl
+-- (b +-Bin b) O ≡ ((b O) O)
+-- ((b O) O) ≡ ((b O) O)
 +-Bin-double (b O) (one-O one-b) rewrite +-Bin-double b one-b = refl
 
 to-from-one : ∀ {b : Bin} → One b → to (from b) ≡ b
 to-from-one one-one = refl
+-- inc (to (from b + (from b + zero))) ≡ (b I)
+-- inc (to (from b + from b)) ≡ (b I)
+-- inc (to (from b) +-Bin to (from b)) ≡ (b I)
+-- inc (b +-Bin b) ≡ (b I)
+-- (b I) ≡ (b I)
 to-from-one {(b I)} (one-I one-b) rewrite +-identityʳ (from b)
                                         | to-distrib-+ (from b) (from b)
                                         | to-from-one {b} one-b
                                         | +-Bin-double b one-b = refl
+-- (to (from b + (from b + zero))) ≡ (b O)
+-- (to (from b + from b)) ≡ (b I)
+-- (to (from b) +-Bin to (from b)) ≡ (b O)
+-- (b +-Bin b) ≡ (b O)
+-- (b O) ≡ (b O)                                        
 to-from-one {(b O)}(one-O one-b) rewrite +-identityʳ (from b)
                                         | to-distrib-+ (from b) (from b)
                                         | to-from-one {b} one-b
@@ -471,3 +496,8 @@ to-from-one {(b O)}(one-O one-b) rewrite +-identityʳ (from b)
 to-from-can : ∀ {b : Bin} → Can b → to (from b) ≡ b
 to-from-can can-zero = refl
 to-from-can (can-one one-b) = to-from-one one-b
+
+-- equivalent stdlib datatypes and functions
+-- import Data.Nat using (_≤_; z≤n; s≤s)
+-- import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-antisym; ≤-total;
+                                  -- +-monoʳ-≤; +-monoˡ-≤; +-mono-≤)
