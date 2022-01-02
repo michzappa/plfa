@@ -85,8 +85,8 @@ inv-z≤n z≤n = refl
   → n ≤ p
     -----
   → m ≤ p
-≤-trans z≤n       _          =  z≤n
-≤-trans (s≤s m≤n) (s≤s n≤p)  =  s≤s (≤-trans m≤n n≤p)
+≤-trans z≤n       _         = z≤n
+≤-trans (s≤s m≤n) (s≤s n≤p) = s≤s (≤-trans m≤n n≤p)
 
 ---- explicit parameters
 ≤-trans′ : ∀ (m n p : ℕ)
@@ -94,8 +94,8 @@ inv-z≤n z≤n = refl
   → n ≤ p
     -----
   → m ≤ p
-≤-trans′ zero    _       _       z≤n       _          =  z≤n
-≤-trans′ (suc m) (suc n) (suc p) (s≤s m≤n) (s≤s n≤p)  =  s≤s (≤-trans′ m n p m≤n n≤p)
+≤-trans′ zero    _       _       z≤n       _         = z≤n
+≤-trans′ (suc m) (suc n) (suc p) (s≤s m≤n) (s≤s n≤p) = s≤s (≤-trans′ m n p m≤n n≤p)
 
 -- anti-symmetry
 ≤-antisym : ∀ {m n : ℕ}
@@ -103,8 +103,8 @@ inv-z≤n z≤n = refl
   → n ≤ m
     -----
   → m ≡ n
-≤-antisym z≤n       z≤n        =  refl
-≤-antisym (s≤s m≤n) (s≤s n≤m)  =  cong suc (≤-antisym m≤n n≤m)
+≤-antisym z≤n       z≤n       = refl
+≤-antisym (s≤s m≤n) (s≤s n≤m) = cong suc (≤-antisym m≤n n≤m)
 
 -- exercise '≤-antisym-cases'
 ---- cases where one argument is z≤n and one is s≤s are unnecessary
@@ -140,37 +140,37 @@ data Total′ : ℕ → ℕ → Set where
 
 ---- recursive with 'with' clause
 ≤-total : ∀ (m n : ℕ) → Total m n
-≤-total zero    n                         =  forward z≤n
-≤-total (suc m) zero                      =  flipped z≤n
+≤-total zero    n                        = forward z≤n
+≤-total (suc m) zero                     = flipped z≤n
 ≤-total (suc m) (suc n) with ≤-total m n
-... | forward m≤n  =  forward (s≤s m≤n)
-... | flipped n≤m  =  flipped (s≤s n≤m)
+... | forward m≤n = forward (s≤s m≤n)
+... | flipped n≤m = flipped (s≤s n≤m)
 
 ---- equivalent definition with helper function
 ≤-total′ : ∀ (m n : ℕ) → Total m n
-≤-total′ zero    n        =  forward z≤n
-≤-total′ (suc m) zero     =  flipped z≤n
-≤-total′ (suc m) (suc n)  =  helper (≤-total′ m n)
+≤-total′ zero    n       = forward z≤n
+≤-total′ (suc m) zero    = flipped z≤n
+≤-total′ (suc m) (suc n) = helper (≤-total′ m n)
   where
   helper : Total m n → Total (suc m) (suc n)
-  helper (forward m≤n)  =  forward (s≤s m≤n)
-  helper (flipped n≤m)  =  flipped (s≤s n≤m)
+  helper (forward m≤n) = forward (s≤s m≤n)
+  helper (flipped n≤m) = flipped (s≤s n≤m)
 
 ---- pattern matching the second argument first
 ≤-total″ : ∀ (m n : ℕ) → Total m n
-≤-total″ m       zero                      =  flipped z≤n
-≤-total″ zero    (suc n)                   =  forward z≤n
+≤-total″ m       zero                     = flipped z≤n
+≤-total″ zero    (suc n)                  = forward z≤n
 ≤-total″ (suc m) (suc n) with ≤-total″ m n
-... | forward m≤n   =  forward (s≤s m≤n)
-... | flipped n≤m   =  flipped (s≤s n≤m)
+... | forward m≤n  = forward (s≤s m≤n)
+... | flipped n≤m  = flipped (s≤s n≤m)
 
 -- monotonicity: ∀ {m n p q : ℕ} → m ≤ n → p ≤ q → m + p ≤ n + q
 +-monoʳ-≤ : ∀ (n p q : ℕ)
   → p ≤ q
     -------------
   → n + p ≤ n + q
-+-monoʳ-≤ zero    p q p≤q  =  p≤q
-+-monoʳ-≤ (suc n) p q p≤q  =  s≤s (+-monoʳ-≤ n p q p≤q)
++-monoʳ-≤ zero    p q p≤q = p≤q
++-monoʳ-≤ (suc n) p q p≤q = s≤s (+-monoʳ-≤ n p q p≤q)
 
 +-monoˡ-≤ : ∀ (m n p : ℕ)
   → m ≤ n
@@ -179,22 +179,22 @@ data Total′ : ℕ → ℕ → Set where
 -- m + p ≤ n + p
 -- p + m ≤ n + p
 -- p + m ≤ p + n (provided by +-monoʳ-≤)
-+-monoˡ-≤ m n p m≤n  rewrite +-comm m p | +-comm n p  = +-monoʳ-≤ p m n m≤n
++-monoˡ-≤ m n p m≤n  rewrite +-comm m p | +-comm n p = +-monoʳ-≤ p m n m≤n
 
 +-mono-≤ : ∀ (m n p q : ℕ)
   → m ≤ n
   → p ≤ q
     -------------
   → m + p ≤ n + q
-+-mono-≤ m n p q m≤n p≤q  =  ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
++-mono-≤ m n p q m≤n p≤q = ≤-trans (+-monoˡ-≤ m n p m≤n) (+-monoʳ-≤ n p q p≤q)
 
 -- exercise '*-mono-≤'
 *-monoʳ-≤ : ∀ (n p q : ℕ)
   → p ≤ q
     -------------
   → n * p ≤ n * q
-*-monoʳ-≤ zero    p q p≤q  =  z≤n
-*-monoʳ-≤ (suc n) p q p≤q  =  +-mono-≤ p q (n * p) (n * q) p≤q (*-monoʳ-≤ n p q p≤q)
+*-monoʳ-≤ zero    p q p≤q = z≤n
+*-monoʳ-≤ (suc n) p q p≤q = +-mono-≤ p q (n * p) (n * q) p≤q (*-monoʳ-≤ n p q p≤q)
 
 *-monoˡ-≤ : ∀ (m n p : ℕ)
   → m ≤ n
@@ -203,7 +203,7 @@ data Total′ : ℕ → ℕ → Set where
 -- m * p ≤ n * p
 -- p * m ≤ n * p
 -- p * m ≤ p * n (provided by *-monoʳ-≤ p m n m≤n)
-*-monoˡ-≤ m n p m≤n  rewrite *-comm m p | *-comm n p  = *-monoʳ-≤ p m n m≤n
+*-monoˡ-≤ m n p m≤n  rewrite *-comm m p | *-comm n p = *-monoʳ-≤ p m n m≤n
 
 *-mono-≤ : ∀ (m n p q : ℕ)
   → m ≤ n
@@ -270,8 +270,8 @@ trichotomy (suc m) (suc n) with trichotomy m n
   → p < q
     -------------
   → n + p < n + q
-+-monoʳ-< zero    p q p<q  =  p<q
-+-monoʳ-< (suc n) p q p<q  =  s<s (+-monoʳ-< n p q p<q)
++-monoʳ-< zero    p q p<q = p<q
++-monoʳ-< (suc n) p q p<q = s<s (+-monoʳ-< n p q p<q)
 
 +-monoˡ-< : ∀ (m n p : ℕ)
   → m < n
@@ -280,14 +280,14 @@ trichotomy (suc m) (suc n) with trichotomy m n
 -- m + p < n + p
 -- p + m < n + p
 -- p + m < p + n (provided by +-monoʳ-< p m n m<n)
-+-monoˡ-< m n p m<n  rewrite +-comm m p | +-comm n p  = +-monoʳ-< p m n m<n
++-monoˡ-< m n p m<n  rewrite +-comm m p | +-comm n p = +-monoʳ-< p m n m<n
 
 +-mono-< : ∀ (m n p q : ℕ)
   → m < n
   → p < q
     -------------
   → m + p < n + q
-+-mono-< m n p q m<n p<q  =  <-trans (+-monoˡ-< m n p m<n) (+-monoʳ-< n p q p<q)
++-mono-< m n p q m<n p<q = <-trans (+-monoˡ-< m n p m<n) (+-monoʳ-< n p q p<q)
 
 -- exercise '≤-iff-<'
 ≤-iff-< : ∀ {m n : ℕ}
@@ -345,10 +345,10 @@ o+e≡o : ∀ {m n : ℕ}
     -----------
   → odd (m + n)
 
-e+e≡e zero     en  =  en
-e+e≡e (suc om) en  =  suc (o+e≡o om en)
+e+e≡e zero     en = en
+e+e≡e (suc om) en = suc (o+e≡o om en)
 
-o+e≡o (suc em) en  =  suc (e+e≡e em en)
+o+e≡o (suc em) en = suc (e+e≡e em en)
 
 -- exercise 'o+o≡e'
 o+o≡e : ∀ {m n : ℕ}
