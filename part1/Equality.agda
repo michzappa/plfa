@@ -285,3 +285,99 @@ even-comm″ : ∀ (m n : ℕ)
     ------------
   → even (n + m)
 even-comm″ m n = subst even (+-comm m n)
+
+-- leibniz equality
+---- first use of 'levels' (Set₁ vs Set),
+---- Set : Set₁, Set₁ : Set₂, etc
+---- since the definition of _≐_ mentions Set on the RHS, the signature must use Set₁
+_≐_ : ∀ {A : Set} (x y : A) → Set₁
+_≐_ {A} x y = ∀ (P : A → Set) → P x → P y
+
+-- leibniz equality is reflexive and transitive
+refl-≐ : ∀ {A : Set} {x : A}
+  → x ≐ x
+-- refl-≐ P Px = Px   -- from the book
+refl-≐ = λ P Px → Px  -- underlying
+
+trans-≐ : ∀ {A : Set} {x y z : A}
+  → x ≐ y
+  → y ≐ z
+    -----
+  → x ≐ z
+-- trans-≐ x≐y y≐z P Px = y≐z P (x≐y P Px) -- from the book
+trans-≐ x≐y y≐z = λ P Px → y≐z P (x≐y P Px)
+
+-- symmetry
+sym-≐ : ∀ {A : Set} {x y : A}
+  → x ≐ y
+    -----
+  → y ≐ x
+-- sym-≐ {A} {x} {y} x≐y P = Qy -- from the book
+--   where
+--     Q : A → Set
+--     Q z = P z → P x
+--     Qx : Q x
+--     Qx = refl-≐ P 
+--     Qy : Q y
+--     Qy = x≐y Q Qx
+sym-≐ {A} {x} {y} x≐y P = x≐y (λ z → P z → P x) (λ Px → Px)
+
+-- ≣ implies ≐ and vice versa
+≡-implies-≐ : ∀ {A : Set} {x y : A}
+  → x ≡ y
+    -----
+  → x ≐ y
+-- ≡-implies-≐ x≡y P = subst P x≡y -- from the book
+≡-implies-≐ x≡y = λ P → subst P x≡y
+
+≐-implies-≡ : ∀ {A : Set} {x y : A}
+  → x ≐ y
+    -----
+  → x ≡ y
+-- ≐-implies-≡ {A} {x} {y} x≐y = Qy -- from the book
+--  where
+--    Q : A → Set
+--    Q z = x ≡ z
+--    Qx : Q x
+--    Qx = refl
+--    Qy : Q y
+--    Qy = x≐y Q Qx
+≐-implies-≡ {A} {x} {y} x≐y = x≐y (_≡_ x) refl
+
+-- universe polymorphism
+---- not every type belongs to Set, but instead somewhere in the
+---- hierarchy Set₀, Set₁, Set₂, etc. This equality is fine for
+---- comparing values of a type in Set, but not for values in Set ℓ
+---- for some arbitrary level ℓ. to do this, use universe polymorphism
+---- where definitions are made with respect to an arbitrary level ℓ
+
+-- rename to avoid conflict
+open import Level using (Level; _⊔_) renaming (zero to lzero; suc to lsuc)
+
+-- lzero and lsuc work isomorphically to natural numbers, _⊔_ takes
+-- two levels and returns the larger of the two equality for an
+
+-- arbitrary level equality
+data _≡ℓ_ {ℓ : Level} {A : Set ℓ} (x : A) : A → Set ℓ where
+  refℓ : x ≡ℓ x
+
+-- arbitrary level symmetry
+symℓ : ∀ {ℓ : Level} {A : Set ℓ} {x y : A}
+  → x ≡ℓ y
+    ------
+  → y ≡ℓ x
+symℓ refℓ = refℓ
+
+-- generalized definition of leibniz equality
+_≐′_ : ∀ {ℓ : Level} {A : Set ℓ} (x y : A) → Set (lsuc ℓ)
+_≐′_ {ℓ} {A} x y = ∀ (P : A → Set ℓ) → P x → P y
+
+-- generalized composition
+_∘_ : ∀ {ℓ₁ ℓ₂ ℓ₃ : Level} {A : Set ℓ₁} {B : Set ℓ₂} {C : Set ℓ₃}
+  → (B → C) → (A → B) → A → C
+(g ∘ f) x  =  g (f x)
+
+-- analogous stdlib imports
+-- import Relation.Binary.PropositionalEquality as Eq
+-- open Eq using (_≡_; refl; trans; sym; cong; cong-app; subst)
+-- open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
