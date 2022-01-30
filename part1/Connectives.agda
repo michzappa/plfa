@@ -372,8 +372,8 @@ currying =
 -- ×⊎-implies-⊎× ⟨ inj₂ c , inj₂ d ⟩ = inj₂ ⟨ c , d ⟩
 
 -- analogous standard library
-import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
-import Data.Unit using (⊤; tt)
-import Data.Sum using (_⊎_; inj₁; inj₂) renaming ([_,_] to case-⊎)
-import Data.Empty using (⊥; ⊥-elim)
-import Function.Equivalence using (_⇔_)
+-- import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
+-- import Data.Unit using (⊤; tt)
+-- import Data.Sum using (_⊎_; inj₁; inj₂) renaming ([_,_] to case-⊎)
+-- import Data.Empty using (⊥; ⊥-elim)
+-- import Function.Equivalence using (_⇔_)
