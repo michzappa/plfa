@@ -1,13 +1,13 @@
 module plfa.part1.Quantifiers where
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open Eq using (_≡_; sym; refl)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _≤_; z≤n; s≤s)
 open import Relation.Nullary using (¬_)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import plfa.part1.Isomorphism using (_≃_; extensionality)
-
+open import plfa.part1.Induction using (+-comm; +-rearrange; +-suc; +-identityʳ)
 -- this rule corresponds to function application
 ∀-elim : ∀ {A : Set} {B : A → Set}
   → (L : ∀ (x : A) → B x)
@@ -110,29 +110,113 @@ syntax ∃-syntax (λ x → B) = ∃[ x ] B
     ; to∘from =  λ{ g → extensionality λ{ ⟨ x , y ⟩ → refl }}
     }
 
--- TODO exercise '∃-distrib-⊎'
+-- exercise '∃-distrib-⊎'
 ∃-distrib-⊎ : ∀ {A : Set} {B C : A → Set} →
   ∃[ x ] (B x ⊎ C x) ≃ (∃[ x ] B x) ⊎ (∃[ x ] C x)
 ∃-distrib-⊎ =
   record
-    { to = {!!}
-    ; from = {!!}
-    ; from∘to = {!!}
-    ; to∘from = {!!}
-    }  
+    { to = λ{ ⟨ x , (inj₁ Bx) ⟩ → inj₁ ⟨ x , Bx ⟩
+            ; ⟨ x , (inj₂ Cx) ⟩ → inj₂ ⟨ x , Cx ⟩
+            }
+    ; from = λ{ (inj₁ ⟨ x , Bx ⟩) → ⟨ x , inj₁ Bx ⟩
+              ; (inj₂ ⟨ x , Cx ⟩) → ⟨ x , (inj₂ Cx) ⟩
+              }
+    ; from∘to = λ{ ⟨ x , (inj₁ Bx) ⟩ → refl
+                ; ⟨ x , (inj₂ Cx) ⟩ → refl
+                }
+    ; to∘from = λ{ (inj₁ ⟨ x , Bx ⟩) → refl
+                 ; (inj₂ ⟨ x , Cx ⟩) → refl
+                 }
+    }
     
--- TODO exercise '∃×-implies-×∃'
-postulate
-  ∃×-implies-×∃ : ∀ {A : Set} {B C : A → Set} →
-    ∃[ x ] (B x × C x) → (∃[ x ] B x) × (∃[ x ] C x)
+-- exercise '∃×-implies-×∃'
+∃×-implies-×∃ : ∀ {A : Set} {B C : A → Set} →
+  ∃[ x ] (B x × C x) → (∃[ x ] B x) × (∃[ x ] C x)
+∃×-implies-×∃ ⟨ x , ⟨ Bx , Cx ⟩ ⟩ = ⟨ ⟨ x , Bx ⟩ , ⟨ x , Cx ⟩ ⟩
     
--- TODO exercise '∃-⊎'
+-- exercise '∃-⊎'
 ∃×-⊎ : ∀ {B : Tri → Set} →
   ∃[ x ] B x ≃ B aa ⊎ B bb ⊎ B cc
 ∃×-⊎ =
   record
-    { to = {!!}
-    ; from = {!!}
-    ; from∘to = {!!}
-    ; to∘from = {!!}
+    { to = λ{ ⟨ aa , Baa ⟩ → inj₁ Baa
+            ; ⟨ bb , Bbb ⟩ → inj₂ (inj₁ Bbb)
+            ; ⟨ cc , Bcc ⟩ → inj₂ (inj₂ Bcc)
+            }
+    ; from = λ{ (inj₁ a) → ⟨ aa , a ⟩
+              ; (inj₂ (inj₁ b)) → ⟨ bb , b ⟩
+              ; (inj₂ (inj₂ c)) → ⟨ cc , c ⟩
+              }
+    ; from∘to = λ{ ⟨ aa , Baa ⟩ → refl
+                 ; ⟨ bb , Bbb ⟩ → refl
+                 ; ⟨ cc , Bcc ⟩ → refl
+                 }
+    ; to∘from = λ{ (inj₁ a) → refl
+                 ; (inj₂ (inj₁ b)) → refl
+                 ; (inj₂ (inj₂ c)) → refl
+                 }
     }  
+
+-- definitions of even and odd from Relations
+data even : ℕ → Set
+data odd  : ℕ → Set
+
+data even where
+
+  even-zero : even zero
+
+  even-suc : ∀ {n : ℕ}
+    → odd n
+      ------------
+    → even (suc n)
+
+data odd where
+  odd-suc : ∀ {n : ℕ}
+    → even n
+      -----------
+    → odd (suc n)
+
+-- a number is even if and only if it is twice some other number, and
+-- a number is odd if and only if it is one more than twice some other
+-- number
+
+-- proof in forward direction
+even-∃ : ∀ {n : ℕ} → even n → ∃[ m ] ( m * 2 ≡ n)
+odd-∃ : ∀ {n : ℕ} → odd n → ∃[ m ] (1 + m * 2 ≡ n)
+
+even-∃ even-zero =  ⟨ zero , refl ⟩
+even-∃ (even-suc o) with odd-∃ o
+...                    | ⟨ m , refl ⟩  =  ⟨ suc m , refl ⟩
+
+odd-∃  (odd-suc e)  with even-∃ e
+...                    | ⟨ m , refl ⟩  =  ⟨ m , refl ⟩
+
+-- proof in reverse direction
+∃-even : ∀ {n : ℕ} → ∃[ m ] (    m * 2 ≡ n) → even n
+∃-odd  : ∀ {n : ℕ} → ∃[ m ] (1 + m * 2 ≡ n) →  odd n
+
+∃-even ⟨  zero , refl ⟩  =  even-zero
+∃-even ⟨ suc m , refl ⟩  =  even-suc (∃-odd ⟨ m , refl ⟩)
+
+∃-odd  ⟨     m , refl ⟩  =  odd-suc (∃-even ⟨ m , refl ⟩)
+
+-- exercise ∃-even-odd
+-- XXX: termination failure
+-- ∃-even′ : ∀ {n : ℕ} → ∃[ m ] (2 * m     ≡ n) → even n
+-- ∃-odd′  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
+
+-- ∃-even′ ⟨ zero , refl ⟩ = even-zero
+-- ∃-even′ ⟨ suc m , refl ⟩  =  even-suc (∃-odd′ ⟨ m , lemma ⟩)
+--   where
+--     lemma : ∀ {x : ℕ} → x + (x + zero) + 1 ≡ x + suc (x + zero)
+--     lemma {x} rewrite sym (+-rearrange x x zero 1)
+--                     | +-comm (x + x) 1
+--                     | sym (+-suc x x)
+--                     | +-identityʳ x = refl
+
+-- ∃-odd′ ⟨ m , refl ⟩ rewrite +-comm (2 * m) 1 =  odd-suc (∃-even′ ⟨ m , refl ⟩)
+
+-- exercise ∃-|-≤
+∃-|-≤ : ∀ {y z : ℕ} → ∃[ x ] (x + y ≡ z) → y ≤ z
+∃-|-≤ ⟨ zero , y≡z ⟩ = {!!}
+∃-|-≤ {y} {z} ⟨ suc x , x+sucy≡z ⟩ rewrite sym (+-suc x y) = {!!}
