@@ -1,13 +1,16 @@
 module plfa.part1.Quantifiers where
 
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; sym; refl)
+open Eq using (_≡_; sym; refl; cong)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _≤_; z≤n; s≤s)
+open import Data.Nat.Properties using (≤-refl; ≤-trans)
 open import Relation.Nullary using (¬_)
 open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_⟩)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import plfa.part1.Isomorphism using (_≃_; extensionality)
 open import plfa.part1.Induction using (+-comm; +-rearrange; +-suc; +-identityʳ)
+open import plfa.part1.Isomorphism using (_≃_; extensionality)
+open import plfa.part1.Relations using (Bin; ⟨⟩; _O; _I; inc; to; from; One; one-one; one-I; one-O; Can; can-zero; can-one; nat-to-can)
+
 -- this rule corresponds to function application
 ∀-elim : ∀ {A : Set} {B : A → Set}
   → (L : ∀ (x : A) → B x)
@@ -201,22 +204,97 @@ odd-∃  (odd-suc e)  with even-∃ e
 ∃-odd  ⟨     m , refl ⟩  =  odd-suc (∃-even ⟨ m , refl ⟩)
 
 -- exercise ∃-even-odd
--- XXX: termination failure
--- ∃-even′ : ∀ {n : ℕ} → ∃[ m ] (2 * m     ≡ n) → even n
--- ∃-odd′  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
+{-# TERMINATING #-}
+∃-even′ : ∀ {n : ℕ} → ∃[ m ] (2 * m     ≡ n) → even n
+∃-odd′  : ∀ {n : ℕ} → ∃[ m ] (2 * m + 1 ≡ n) →  odd n
 
--- ∃-even′ ⟨ zero , refl ⟩ = even-zero
--- ∃-even′ ⟨ suc m , refl ⟩  =  even-suc (∃-odd′ ⟨ m , lemma ⟩)
---   where
---     lemma : ∀ {x : ℕ} → x + (x + zero) + 1 ≡ x + suc (x + zero)
---     lemma {x} rewrite sym (+-rearrange x x zero 1)
---                     | +-comm (x + x) 1
---                     | sym (+-suc x x)
---                     | +-identityʳ x = refl
+∃-even′ ⟨ zero , refl ⟩ = even-zero
+∃-even′ ⟨ suc m , refl ⟩  =  even-suc (∃-odd′ ⟨ m , lemma ⟩)
+  where
+    lemma : ∀ {x : ℕ} → x + (x + zero) + 1 ≡ x + suc (x + zero)
+    lemma {x} rewrite sym (+-rearrange x x zero 1)
+                    | +-comm (x + x) 1
+                    | sym (+-suc x x)
+                    | +-identityʳ x = refl
 
--- ∃-odd′ ⟨ m , refl ⟩ rewrite +-comm (2 * m) 1 =  odd-suc (∃-even′ ⟨ m , refl ⟩)
+∃-odd′ ⟨ m , refl ⟩ rewrite +-comm (2 * m) 1 =  odd-suc (∃-even′ ⟨ m , refl ⟩)
 
 -- exercise ∃-|-≤
+≤-suc : ∀ {x : ℕ} → x ≤ suc x
+≤-suc {zero} = z≤n
+≤-suc {suc x} = s≤s ≤-suc
+
+-- peculiar how these two have the same proof
+≤-something : ∀{x y : ℕ} → y ≤ x + y
+≤-something {zero} {y} = ≤-refl
+≤-something {suc x} {y} rewrite sym (+-suc x y) = ≤-trans ≤-suc ≤-something
+
 ∃-|-≤ : ∀ {y z : ℕ} → ∃[ x ] (x + y ≡ z) → y ≤ z
-∃-|-≤ ⟨ zero , y≡z ⟩ = {!!}
-∃-|-≤ {y} {z} ⟨ suc x , x+sucy≡z ⟩ rewrite sym (+-suc x y) = {!!}
+∃-|-≤ ⟨ zero , refl ⟩ = ≤-refl
+∃-|-≤ {y} {z} ⟨ suc x , refl ⟩ rewrite sym (+-suc x y) = ≤-trans ≤-suc ≤-something
+
+-- existentials, univerals, and negation
+¬∃≃∀¬ : ∀ {A : Set} {B : A → Set}
+  → (¬ ∃[ x ] B x) ≃ ∀ x → ¬ B x
+¬∃≃∀¬ =
+  record
+    { to      =  λ{ ¬∃xy x y → ¬∃xy ⟨ x , y ⟩ }
+    ; from    =  λ{ ∀¬xy ⟨ x , y ⟩ → ∀¬xy x y }
+    ; from∘to =  λ{ ¬∃xy → extensionality λ{ ⟨ x , y ⟩ → refl } }
+    ; to∘from =  λ{ ∀¬xy → refl }
+    }
+
+-- exercise ∃¬-implies-¬∀
+∃¬-implies-¬∀ : ∀ {A : Set} {B : A → Set}
+  → ∃[ x ] (¬ B x)
+    --------------
+  → ¬ (∀ x → B x)
+∃¬-implies-¬∀ ⟨ x , ¬Bx ⟩ = λ x→Bx → ¬Bx (x→Bx x)
+
+-- not sure why this can't be proven as easily
+-- ¬∀-implies-∃¬ : ∀ {A : Set} {B : A → Set}
+  -- → ¬ (∀ x → B x)
+    -- --------------
+  -- → ∃[ x ] (¬ B x)
+-- ¬∀-implies-∃¬ {A} {B} x = ⟨ {!!} , {!!} ⟩
+
+-- exercise Bin-isomorphism
+
+≡One : ∀ {b : Bin} (o o′ : One b) → o ≡ o′
+≡One one-one one-one = refl
+≡One (one-I x) (one-I y) = cong one-I (≡One x y)
+≡One (one-O x) (one-O y) = cong one-O (≡One x y)
+
+≡Can : ∀ {b : Bin} (cb cb′ : Can b) → cb ≡ cb′
+≡Can can-zero can-zero = refl
+≡Can can-zero (can-one (one-O ()))
+≡Can (can-one (one-O ())) can-zero
+≡Can (can-one x) (can-one y) = cong can-one (≡One x y)
+
+-- type error here from the textbook source?
+-- proj₁≡→Can≡ : {cb cb′ : ∃[ b ] Can b} → proj₁ cb ≡ proj₁ cb′ → cb ≡ cb′
+-- proj₁≡→Can≡ = ?
+
+-- copied from plfa.part1.Induction due to poor structuring of shared code
+from-suc : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+from-suc ⟨⟩ = refl
+from-suc (b O) = refl
+from-suc (b I) rewrite from-suc b
+                     | +-identityʳ (from b)
+                     | +-suc (from b) (from b) = refl
+                     
+from-to : ∀ (n : ℕ) → from (to n) ≡ n
+from-to zero = refl
+from-to (suc n) rewrite from-suc (to n) | from-to n = refl
+
+ℕ≃Bin : ℕ ≃ ∃[ x ](Can x)
+ℕ≃Bin =
+  record
+    { to = λ{ n → ⟨ to n , nat-to-can n ⟩ }
+    ; from = λ{ ⟨ x , y ⟩ → from x }
+    ; from∘to = from-to
+    ; to∘from = {!!}
+    }
+
+-- equivalent stdlib
+-- import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax)
