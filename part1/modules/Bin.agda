@@ -2,9 +2,9 @@ module plfa.part1.modules.Bin where
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 open import Data.Nat using(ℕ; zero; suc; _+_; _*_)
-open import plfa.part1.Induction using (+-identityʳ; +-suc)
+open import Data.Nat.Properties using (+-identityʳ; +-suc)
+open import Data.Product using (_×_; proj₁; proj₂; ∃; ∃-syntax) renaming (_,_ to ⟨_,_⟩)
 open import plfa.part1.Isomorphism using (_≲_; _≃_)
-open import plfa.part1.Quantifiers using (∃-syntax; ⟨_,_⟩)
 
 -- exercise 'Bin'
 data Bin : Set where
@@ -233,20 +233,19 @@ to-from-can (can-one one-b) = to-from-one one-b
 ≡One (one-O x) (one-O y) = cong one-O (≡One x y)
 
 ≡Can : ∀ {b : Bin} (cb cb′ : Can b) → cb ≡ cb′
-≡Can can-zero can-zero = refl
 ≡Can can-zero (can-one (one-O ()))
 ≡Can (can-one (one-O ())) can-zero
+≡Can can-zero can-zero = refl
 ≡Can (can-one x) (can-one y) = cong can-one (≡One x y)
 
--- type error here from the textbook source?
--- proj₁≡→Can≡ : {cb cb′ : ∃[ b ] Can b} → proj₁ cb ≡ proj₁ cb′ → cb ≡ cb′
--- proj₁≡→Can≡ = ?
+proj₁≡→Can≡ : {cb cb′ : ∃[ b ] Can b} → proj₁ cb ≡ proj₁ cb′ → cb ≡ cb′
+proj₁≡→Can≡ {⟨ b , cb ⟩} {⟨ b , cb′ ⟩} refl = cong (λ{ x → ⟨ b , x ⟩}) (≡Can cb cb′)
 
 ℕ≃Bin : ℕ ≃ ∃[ x ](Can x)
 ℕ≃Bin =
   record
     { to = λ{ n → ⟨ to n , nat-to-can n ⟩ }
-    ; from = λ{ ⟨ x , y ⟩ → from x }
+    ; from = λ{ ⟨ b , cb ⟩ → from b }
     ; from∘to = from-to
-    ; to∘from = {!!}
+    ; to∘from = λ{ ⟨ b , cb ⟩ → proj₁≡→Can≡ (to-from-can cb) }
     }
