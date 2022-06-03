@@ -313,44 +313,7 @@ record _⇔_ (A B : Set) : Set where
     ; from     = λ z → _⇔_.from A⇔B (_⇔_.from B⇔C z)
     }
 
--- exercise 'Bin-embedding'
----- Bin type and functions from plfa.part1.Naturals and
----- plfa.part1.Induction, names modified to not conflict with other
----- parts of this module
-data Bin : Set where
-  ⟨⟩ : Bin
-  _O : Bin → Bin
-  _I : Bin → Bin
-
-inc : Bin → Bin
-inc ⟨⟩ = ⟨⟩ I
-inc (m O) = m I
-inc (m I) = (inc m) O
-
-to-bin : ℕ → Bin
-to-bin zero = ⟨⟩ O
-to-bin (suc m) = inc (to-bin m)
-
-from-bin : Bin → ℕ
-from-bin ⟨⟩ = zero
-from-bin (m O) = 2 * from-bin m
-from-bin (m I) = suc (2 * from-bin m)
-
-postulate
-  from-to-bin : ∀ (n : ℕ) → from-bin (to-bin n) ≡ n
-
-ℕ≲Bin : ℕ ≲ Bin
-ℕ≲Bin =
-  record
-    { to = λ n → to-bin n
-    ; from = λ b → from-bin b
-    ; from∘to = λ n → from-to-bin n
-    }
-
--- to and from do not form an isomorphism since, as we saw in
--- plfa.part1.Induction, (from ⟨⟩) and (from ⟨⟩ O) both give 0 but (to
--- 0) gives only ⟨⟩ O. Thus there is the many-to-one from Bin → ℕ,
--- which is an embedding and not an isomorphism.
+-- exercise 'Bin-embedding' in plfa.part1.modules.Bin
 
 -- analogous standard library
 import Function using (_∘_)

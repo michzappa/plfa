@@ -325,48 +325,7 @@ open import Data.Nat using(ℕ; zero; suc; _+_; _*_;_∸_; _^_)
                             | sym (^-distribˡ-|-* m n (n * p))
                             | *-suc n p = refl
 
--- exercise Bin-laws
----- Bin type and functions from plfa.part1.Naturals
-data Bin : Set where
-  ⟨⟩ : Bin
-  _O : Bin → Bin
-  _I : Bin → Bin
+-- exercise Bin-laws in plfa.part1.modules.Bin
 
-inc : Bin → Bin
-inc ⟨⟩ = ⟨⟩ I
-inc (m O) = m I
-inc (m I) = (inc m) O
-
-to : ℕ → Bin
-to zero = ⟨⟩ O
-to (suc m) = inc (to m)
-
-from : Bin → ℕ
-from ⟨⟩ = zero
-from (m O) = 2 * from m -- binary number principle
--- note: 2 * from m is turned into (from m + (from m + zero)) by agda internals
-from (m I) = suc (2 * from m)
-
-from-suc : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
-from-suc ⟨⟩ = refl
-from-suc (b O) = refl
--- from (inc b) + (from (inc b) + zero) ≡ suc (suc (from b + (from b + zero)))
--- suc (from b + suc (from b + 0))      ≡ suc (suc (from b + (from b + 0)))
--- suc (from b + suc (from b))          ≡ suc (suc (from b + from b))
--- suc (suc (from b + from b))          ≡ suc (suc (from b + from b))
-from-suc (b I) rewrite from-suc b
-                     | +-identityʳ (from b)
-                     | +-suc (from b) (from b) = refl
-
--- to-from : ∀ (b : Bin) → to (from b) ≡ b
--- to-from ⟨⟩ = {!!}
----- counterexample: from ⟨⟩ = 0, but (to 0) = ⟨⟩ O, which is not ⟨⟩
--- to-from (b O) = {!!}
--- to-from (b I) = {!!}
-
-from-to : ∀ (n : ℕ) → from (to n) ≡ n
-from-to zero = refl
--- from (inc (to n)) ≡ suc n
--- suc (from (to n)) ≡ suc n
--- suc n             ≡ suc n
-from-to (suc n) rewrite from-suc (to n) | from-to n = refl
+-- stdlib equivalents
+import Data.Nat.Properties using (+-assoc; +-identityʳ; +-suc; +-comm)

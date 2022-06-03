@@ -9,7 +9,6 @@ open import Data.Product using (_×_; proj₁; proj₂) renaming (_,_ to ⟨_,_�
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import plfa.part1.Induction using (+-comm; +-rearrange; +-suc; +-identityʳ)
 open import plfa.part1.Isomorphism using (_≃_; extensionality)
-open import plfa.part1.Relations using (Bin; ⟨⟩; _O; _I; inc; to; from; One; one-one; one-I; one-O; Can; can-zero; can-one; nat-to-can)
 
 -- this rule corresponds to function application
 ∀-elim : ∀ {A : Set} {B : A → Set}
@@ -257,44 +256,6 @@ odd-∃  (odd-suc e)  with even-∃ e
     -- --------------
   -- → ∃[ x ] (¬ B x)
 -- ¬∀-implies-∃¬ {A} {B} x = ⟨ {!!} , {!!} ⟩
-
--- exercise Bin-isomorphism
-
-≡One : ∀ {b : Bin} (o o′ : One b) → o ≡ o′
-≡One one-one one-one = refl
-≡One (one-I x) (one-I y) = cong one-I (≡One x y)
-≡One (one-O x) (one-O y) = cong one-O (≡One x y)
-
-≡Can : ∀ {b : Bin} (cb cb′ : Can b) → cb ≡ cb′
-≡Can can-zero can-zero = refl
-≡Can can-zero (can-one (one-O ()))
-≡Can (can-one (one-O ())) can-zero
-≡Can (can-one x) (can-one y) = cong can-one (≡One x y)
-
--- type error here from the textbook source?
--- proj₁≡→Can≡ : {cb cb′ : ∃[ b ] Can b} → proj₁ cb ≡ proj₁ cb′ → cb ≡ cb′
--- proj₁≡→Can≡ = ?
-
--- copied from plfa.part1.Induction due to poor structuring of shared code
-from-suc : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
-from-suc ⟨⟩ = refl
-from-suc (b O) = refl
-from-suc (b I) rewrite from-suc b
-                     | +-identityʳ (from b)
-                     | +-suc (from b) (from b) = refl
-                     
-from-to : ∀ (n : ℕ) → from (to n) ≡ n
-from-to zero = refl
-from-to (suc n) rewrite from-suc (to n) | from-to n = refl
-
-ℕ≃Bin : ℕ ≃ ∃[ x ](Can x)
-ℕ≃Bin =
-  record
-    { to = λ{ n → ⟨ to n , nat-to-can n ⟩ }
-    ; from = λ{ ⟨ x , y ⟩ → from x }
-    ; from∘to = from-to
-    ; to∘from = {!!}
-    }
 
 -- equivalent stdlib
 -- import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax)
