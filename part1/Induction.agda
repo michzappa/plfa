@@ -218,12 +218,12 @@ open import Data.Nat using(ℕ; zero; suc; _+_; _*_;_∸_; _^_)
                    | +-assoc n m p = refl
 
 -- exercise *-distrib-+
-+-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
-+-distrib-+ zero n p = refl
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ zero n p = refl
 -- p + (m + n) * p     ≡ p + m * p + n * p
 -- p + (m * p + n * p) ≡ p + m * p + n * p
 -- (p + m * p) + n * p ≡ p + m * p + n * p
-+-distrib-+ (suc m) n p rewrite +-distrib-+ m n p
+*-distrib-+ (suc m) n p rewrite *-distrib-+ m n p
                               | sym (+-assoc p (m * p) (n * p)) = refl
 
 -- exercise *-assoc
@@ -232,7 +232,7 @@ open import Data.Nat using(ℕ; zero; suc; _+_; _*_;_∸_; _^_)
 -- (n + m * n) * p     ≡ n * p + m * (n * p)
 -- n * p + m * n * p   ≡ n * p + m * (n * p)
 -- n * p + m * (n * p) ≡ n * p + m * (n * p)
-*-assoc (suc m) n p rewrite +-distrib-+ n (m * n) p
+*-assoc (suc m) n p rewrite *-distrib-+ n (m * n) p
                           | *-assoc m n p = refl
 
 -- exercise *-comm
