@@ -640,6 +640,8 @@ All-++-≃ xs ys =
     from [] ys ⟨ [] , Pys ⟩ = Pys
     from (x ∷ xs) ys ⟨ Px ∷ Pxs , Pys ⟩ = Px ∷ from xs ys ⟨ Pxs , Pys ⟩    
 
+    -- the 'with' in `to` causes problems when trying to write out the
+    -- intermediate steps, not super sure what they look like
     from∘to : ∀ {A : Set} {P : A → Set} (xs ys : List A) (x : All P (xs ++ ys))
       → from xs ys (to xs ys x) ≡ x
     from∘to [] ys Pxs++ys = refl
