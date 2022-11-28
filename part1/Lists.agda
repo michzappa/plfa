@@ -13,7 +13,7 @@ open import Data.Sum using (_⊎_; inj₁; inj₂) renaming ([_,_] to case-⊎)
 open import Function using (_∘_)
 open import Level using (Level)
 open import plfa.part1.Induction using (*-comm; *-distrib-+)
-open import plfa.part1.Isomorphism using (_≃_; _⇔_; extensionality)
+open import plfa.part1.Isomorphism using (_≃_; _⇔_; extensionality; ∀-extensionality)
 
 -- parameterized type
 data List (A : Set) : Set where
@@ -584,7 +584,7 @@ All-++-⇔ xs ys =
     to [] ys Pys = ⟨ [] , Pys ⟩
     to (x ∷ xs) ys (Px ∷ Pxs++ys) with to xs ys Pxs++ys
     ... | ⟨ Pxs , Pys ⟩ = ⟨ Px ∷ Pxs , Pys ⟩
-  
+
     from : ∀ { A : Set} {P : A → Set} (xs ys : List A) →
        All P xs × All P ys → All P (xs ++ ys)
     from [] ys ⟨ [] , Pys ⟩ = Pys
@@ -595,18 +595,18 @@ Any-++-⇔ : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
   Any P (xs ++ ys) ⇔ (Any P xs ⊎ Any P ys)
 Any-++-⇔ xs ys =
   record
-    { to = to xs ys 
+    { to = to xs ys
     ; from = from xs ys
     }
     where
     to : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
       Any P (xs ++ ys) → (Any P xs ⊎ Any P ys)
     to [] ys Pys = inj₂ Pys
-    to (x ∷ xs) ys (here Px) = inj₁ (here Px) 
+    to (x ∷ xs) ys (here Px) = inj₁ (here Px)
     to (x ∷ xs) ys (there Pxs++ys) with to xs ys Pxs++ys
     ... | inj₁ Pxs = inj₁ (there Pxs)
     ... | inj₂ Pys = inj₂ Pys
-    
+
     from : ∀ { A : Set} {P : A → Set} (xs ys : List A) →
        Any P xs ⊎ Any P ys → Any P (xs ++ ys)
     from [] ys (inj₂ Pys) = Pys
@@ -631,23 +631,96 @@ All-++-≃ xs ys =
   where
     to : ∀ {A : Set} {P : A → Set} (xs ys : List A) →
      All P (xs ++ ys) → (All P xs × All P ys)
-    to [] ys Pys = ⟨ [] , Pys ⟩ 
+    to [] ys Pys = ⟨ [] , Pys ⟩
     to (x ∷ xs) ys (Px ∷ Pxs++ys) with to xs ys Pxs++ys
     ... | ⟨ Pxs , Pys ⟩ = ⟨ Px ∷ Pxs , Pys ⟩
-    
+
     from : ∀ { A : Set} {P : A → Set} (xs ys : List A) →
        All P xs × All P ys → All P (xs ++ ys)
     from [] ys ⟨ [] , Pys ⟩ = Pys
-    from (x ∷ xs) ys ⟨ Px ∷ Pxs , Pys ⟩ = Px ∷ from xs ys ⟨ Pxs , Pys ⟩    
+    from (x ∷ xs) ys ⟨ Px ∷ Pxs , Pys ⟩ = Px ∷ from xs ys ⟨ Pxs , Pys ⟩
 
-    -- the 'with' in `to` causes problems when trying to write out the
-    -- intermediate steps, not super sure what they look like
     from∘to : ∀ {A : Set} {P : A → Set} (xs ys : List A) (x : All P (xs ++ ys))
       → from xs ys (to xs ys x) ≡ x
     from∘to [] ys Pxs++ys = refl
-    from∘to (x ∷ xs) ys (Px ∷ Pxs++ys) = cong (Px ∷_) (from∘to xs ys Pxs++ys)
-    
+    from∘to (x ∷ xs) ys (Px ∷ Pxs++ys) rewrite from∘to xs ys Pxs++ys = refl
+
     to∘from : ∀ {A : Set} {P : A → Set} (xs ys : List A) (y : All P xs × All P ys)
       → to xs ys (from xs ys y) ≡ y
     to∘from [] ys ⟨ [] , Pys ⟩ = refl
     to∘from (x ∷ xs) ys ⟨ Px ∷ Pxs , Pys ⟩ rewrite to∘from xs ys ⟨ Pxs , Pys ⟩ = refl
+
+-- exercise '¬Any⇔All¬'
+¬Any⇔All¬ : ∀  {A : Set} {P : A → Set} (xs : List A) →
+  (¬_ ∘ Any P) xs ⇔ All (¬_ ∘ P) xs
+¬Any⇔All¬ xs =
+  record
+    { to = to xs
+    ; from = from xs
+    }
+  where
+    to : ∀ {A : Set} {P : A → Set} (xs : List A) →
+      (¬_ ∘ Any P) xs → All (¬_ ∘ P) xs
+    to [] H = []
+    to (x ∷ xs) H = (λ Px → H (here Px)) ∷ to xs λ AnyPxs → H (there AnyPxs)
+
+    from : ∀ {A : Set} {P : A → Set} (xs : List A) →
+      All (¬_ ∘ P) xs → (¬_ ∘ Any P) xs
+    from [] H = λ ()
+    from (x ∷ xs) (¬Px ∷ All¬Pxs) = λ { (here Px) → ¬Px Px ; (there AnyPxs) → from xs All¬Pxs AnyPxs }
+
+-- ¬All⇔Any¬ : ∀  {A : Set} {P : A → Set} (xs : List A) →
+--   (¬_ ∘ All P) xs ⇔ Any (¬_ ∘ P) xs
+-- of course we don't, if P is "less than 5": the list [ 1 6 ] has an
+-- Any but not an All
+
+-- exercise 'All-∀'
+postulate
+  extensionality-impl : ∀ {A : Set} {B : A → Set} → {f g : {x : A} → B x}
+    → ((x : A) → f {x} ≡ g {x})
+    → (λ {x} → f {x}) ≡ g
+
+All-∀ : ∀ {A : Set} {P : A → Set} (xs : List A) →
+  All P xs ≃ (∀ {x} → x ∈ xs → P x)
+All-∀ {A} {P} xs =
+  record
+    { to = to xs
+    ; from = from xs
+    ; from∘to = from∘to xs
+    ; to∘from = λ x∈xs→Px → extensionality-impl λ x → extensionality λ x∈xs → to∘from xs x∈xs→Px x∈xs
+    }
+  where
+    to : ∀ (xs : List A) → All P xs → (∀ {x} → x ∈ xs → P x)
+    to [] AllPxs = λ ()
+    to (x ∷ xs) (Px ∷ AllPxs) (here refl) = Px
+    to (x ∷ xs) (Px ∷ AllPxs) (there a∈xs) = to xs AllPxs a∈xs
+
+    from : ∀ (xs : List A) → (∀ {x} → x ∈ xs → P x) → All P xs
+    from [] H = []
+    from (x ∷ xs) H = H (here refl) ∷ from xs λ a∈xs → H (there a∈xs)
+
+    from∘to : ∀ (xs : List A) (AllPxs : All P xs) →
+      from xs (to xs AllPxs) ≡ AllPxs
+    from∘to [] [] = refl
+    from∘to (x ∷ xs) (Px ∷ AllPxs) = cong ((Px ∷_)) (from∘to xs AllPxs)
+
+    to∘from : ∀ {x : A} (xs : List A) (x∈xs→Px : (∀ {x} → x ∈ xs → P x)) (x∈xs : x ∈ xs) →
+      to xs (from xs x∈xs→Px) x∈xs ≡ x∈xs→Px x∈xs
+    to∘from (x ∷ xs) x→x∈xs→Px (here refl) = refl
+    to∘from (x ∷ xs) x→x∈xs→Px (there x∈xs) = to∘from xs (λ z → x→x∈xs→Px (there z)) x∈xs
+
+Any-∃ : ∀ {A : Set} {P : A → Set} (xs : List A) →
+  Any P xs ≃ ∃[ x ] (x ∈ xs × P x)
+Any-∃ {A} {P} xs =
+  record
+    { to = to xs
+    ; from = {!!}
+    ; from∘to = {!!}
+    ; to∘from = {!!}
+    }
+  where
+    to : ∀ {A : Set} {P : A → Set} (xs : List A) → Any P xs → ∃[ x ] (x ∈ xs × P x)
+    to [] = λ ()
+    to (x ∷ xs) (here Px) = ⟨ x , ⟨ here refl , Px ⟩ ⟩
+    to (x ∷ xs) (there Pxs) = with to xs
+    ... |
